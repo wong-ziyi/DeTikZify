@@ -1,6 +1,8 @@
 # Installation with Conda
 
 ```bash
+sudo apt update
+sudo apt install texlive-full
 conda create -n detikzify-env python=3.11 -y
 conda activate detikzify-env
 pip install torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cu121
