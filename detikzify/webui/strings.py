@@ -138,3 +138,15 @@ REDIRECT_ON_DISCONNECT = """
     });
 </script>
 """
+
+# Google Analytics
+GOOGLE_ANALYTICS = """
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-RWF876HNKW"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-RWF876HNKW');
+</script>
+"""
