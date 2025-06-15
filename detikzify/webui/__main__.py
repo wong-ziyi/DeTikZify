@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 
 from .strings import ALGORITHMS, MODELS
 from .webui import build_ui
+from .helpers import configure_hooks
 
 def parse_args():
     argument_parser = ArgumentParser(
@@ -55,6 +56,7 @@ if __name__ == "__main__":
     args = parse_args()
     share = args.pop("share")
     root_path = args.pop("root_path")
+    configure_hooks(root_path)
     build_ui(**args).queue().launch(
         share=share,
         server_port=7860,
