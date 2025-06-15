@@ -25,7 +25,15 @@ from .helpers import (
     disconnect_user,
     hooks_enabled,
 )
-from .strings import ALGORITHMS, BANNER, CSS, GALLERY_DESELECT_HACK, MODELS, REDIRECT_ON_DISCONNECT
+from .strings import (
+    ALGORITHMS,
+    BANNER,
+    CSS,
+    GALLERY_DESELECT_HACK,
+    MODELS,
+    REDIRECT_ON_DISCONNECT,
+    GOOGLE_ANALYTICS,
+)
 
 def simulate(pipe, streamer, image,  preprocess, exploration, strict, timeout, thread, tmpdir):
     iterator = pipe.simulate(
@@ -141,7 +149,11 @@ def build_ui(
     algorithm=list(ALGORITHMS)[0]
 ):
     theme = make_light(gr.themes.Soft()) if light else gr.themes.Soft()
-    head_html = GALLERY_DESELECT_HACK + (REDIRECT_ON_DISCONNECT if hooks_enabled() else "")
+    head_html = (
+        GALLERY_DESELECT_HACK
+        + (REDIRECT_ON_DISCONNECT if hooks_enabled() else "")
+        + GOOGLE_ANALYTICS
+    )
     with gr.Blocks(css=CSS, theme=theme, title="DeTikZify", head=head_html) as demo: # type: ignore
         if light: make_light(demo)
         demo.load(connect_user, None, None, queue=False)
