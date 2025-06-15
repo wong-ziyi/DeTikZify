@@ -3,6 +3,17 @@
 ```bash
 sudo apt update
 sudo apt install texlive-full
+```
+
+If the installation of `texlive-full` hang on like fever, `ctr-c` then run commands below:
+```bash
+sudo dpkg -r context-modules
+sudo dpkg -r context
+sudo dpkg -r texlive-full
+sudo dpkg --configure -a
+```
+
+```bash
 conda create -n detikzify-env python=3.11 -y
 conda activate detikzify-env
 pip install torch==2.5.1 torchvision==0.20.1 --index-url https://download.pytorch.org/whl/cu121
