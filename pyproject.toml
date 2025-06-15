@@ -20,7 +20,7 @@ dependencies = [
   "pdfCropMargins~=2.1.4",
   # webui
   "gradio~=5.34.0",
-  "fastapi~=0.112.4", # https://github.com/gradio-app/gradio/issues/9278
+  "fastapi~=0.115.2", # https://github.com/gradio-app/gradio/issues/9278
   "pydantic~=2.10.6", # https://github.com/gradio-app/gradio/issues/10662
   # evaluate
   "POT~=0.9.4",
