@@ -207,6 +207,79 @@ if fig.is_rasterizable:
 More involved examples, for example for evaluation and training, can be found
 in the [examples](examples) folder.
 
+## Running the Web UI as a Service
+
+On Ubuntu you can launch the web interface automatically via
+[systemd](https://www.freedesktop.org/wiki/Software/systemd/).  Create a file
+named `detikzify-webui.service` in `/etc/systemd/system/` with the following
+contents (adjust the Python path and user to match your setup):
+
+```ini
+[Unit]
+Description=DeTi*k*Zify Web UI
+After=network.target
+
+[Service]
+ExecStart=/home/$HOME/miniconda3/envs/detikzify-env/bin/python -m detikzify.webui --light --root_path http://<server_ip>:4000/workstation-17/DeTikZify/
+StandardOutput=append:/var/log/DeKitZify.log
+Restart=always
+User=mbb-aba
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then reload the service files and enable the new service:
+
+```sh
+sudo systemctl daemon-reload
+sudo systemctl enable detikzify-webui.service
+sudo systemctl start detikzify-webui.service
+```
+
+You also need nginx proxy
+
+```bash
+sudo apt update
+sudo apt install nginx
+sudo useradd --system --no-create-home --shell /sbin/nologin nginx
+```
+
+🛠 Add these lines to your nginx.conf, inside the http block:
+```nginx
+http {
+    proxy_headers_hash_max_size 1024;
+    proxy_headers_hash_bucket_size 128;
+
+    # ... your other settings ...
+}
+```
+
+Add below into the `http{...server{}}` block;
+```nginx
+    location /DeTikZify/ {  # Change this if you'd like to server your Gradio app on a different path
+        proxy_pass http://127.0.0.1:7860/; # Change this if your Gradio app will be running on a different port
+        proxy_buffering off;
+        proxy_redirect off;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Host $http_host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+```
+
+Run belows to start nginx
+```bash
+sudo nginx -t
+sudo systemctl reload nginx
+sudo nginx -s reload
+sudo systemctl restart nginx
+```
+
 ## Model Weights & Datasets
 We upload all our DeTi*k*Zify models and datasets to the [Hugging Face
 Hub](https://huggingface.co/collections/nllg/detikzify-664460c521aa7c2880095a8b)

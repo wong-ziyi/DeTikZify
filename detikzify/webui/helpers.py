@@ -84,14 +84,40 @@ def make_light(stylable):
     else:
         raise ValueError
 
+_cached = None
+
 @lru_cache(maxsize=1)
 def cached_load(*args, **kwargs):
+    """Load the model once and cache it."""
+    global _cached
     gr.Info("Instantiating model. This could take a while...")
-    return load(*args, **kwargs)
+    _cached = load(*args, **kwargs)
+    return _cached
 
 @cache
 def info_once(message):
     gr.Info(message)
+
+def clear_cached_model():
+    """Release cached model and free GPU memory."""
+    global _cached
+    cached_load.cache_clear()
+    try:
+        import gc
+        import torch
+        if _cached:
+            model, _ = _cached
+            try:
+                model.cpu()
+            except Exception:
+                pass
+            _cached = None
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
+    except Exception:
+        pass
 
 class GeneratorLock:
     """
@@ -113,3 +139,84 @@ class GeneratorLock:
 
     def __call__(self, *args, **kwargs):
         yield from self.generate(*args, **kwargs)
+
+# ---------------------------------------------------------------------------
+# Connection helpers for integration with ShinyAppManage system
+# ---------------------------------------------------------------------------
+
+_user_info: dict = {}
+_enable_hooks: bool = False
+
+def configure_hooks(root_path: str | None):
+    """Enable connection hooks when running behind a proxy."""
+    global _enable_hooks
+    _enable_hooks = bool(root_path)
+
+def hooks_enabled() -> bool:
+    return _enable_hooks
+
+def url_execute(curl_type, cur_url, cur_data=None, cur_header=None):
+    """Utility to send HTTP requests used by the management API."""
+    if not _enable_hooks:
+        return {"code": -1}
+    import requests
+    try:
+        if curl_type == 1:
+            res = requests.get(cur_url, headers=cur_header)
+        else:
+            res = requests.post(cur_url, headers=cur_header, json=cur_data)
+        if res.status_code == 200:
+            return res.json()
+        else:
+            return {"code": -1}
+    except Exception:
+        return {"code": -1}
+
+def connect_user(request: gr.Request):
+    """Notify ShinyAppManage that a session was created."""
+    if not _enable_hooks:
+        return _user_info
+    query = dict(request.query_params or {})
+    _user_info.clear()
+    _user_info.update({
+        "id": query.get("id"),
+        "appName": query.get("appName"),
+        "token": query.get("token"),
+    })
+    token = _user_info.get("token")
+    if token:
+        headers = {"Token": token, "Content-Type": "application/json"}
+        connect_req = {
+            "appName": _user_info.get("appName"),
+            "action": "connect",
+            "id": _user_info.get("id"),
+        }
+        data = url_execute(
+            2,
+            "http://10.2.26.152/sqx_fast/app/workstation/shiny-connect-action",
+            connect_req,
+            headers,
+        )
+        if data.get("code", -1) != 0:
+            gr.Warning("Failed to notify connect action")
+    return _user_info
+
+def disconnect_user():
+    """Notify ShinyAppManage that the session ended."""
+    if not (_enable_hooks and _user_info):
+        return
+    headers = {
+        "Token": _user_info.get("token"),
+        "Content-Type": "application/json",
+    }
+    disconnect_req = {
+        "appName": _user_info.get("appName"),
+        "action": "disconnect",
+        "id": _user_info.get("id"),
+    }
+    url_execute(
+        2,
+        "http://10.2.26.152/sqx_fast/app/workstation/shiny-connect-action",
+        disconnect_req,
+        headers,
+    )
