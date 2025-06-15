@@ -129,3 +129,12 @@ GALLERY_DESELECT_HACK = """
     observer.observe(document.body, observerOptions);
 </script>
 """
+
+# Redirect to booking system home when the frontend disconnects
+REDIRECT_ON_DISCONNECT = """
+<script>
+    window.addEventListener('gradio:disconnected', function () {
+      window.location.href = 'http://10.2.26.152/';
+    });
+</script>
+"""
