@@ -177,6 +177,36 @@ if fig.is_rasterizable:
 More involved examples, for example for evaluation and training, can be found
 in the [examples](examples) folder.
 
+## Running the Web UI as a Service
+
+On Ubuntu 22.04 you can launch the web interface automatically via
+[systemd](https://www.freedesktop.org/wiki/Software/systemd/).  Create a file
+named `detikzify-webui.service` in `/etc/systemd/system/` with the following
+contents (adjust the Python path and user to match your setup):
+
+```ini
+[Unit]
+Description=DeTi*k*Zify Web UI
+After=network.target
+
+[Service]
+ExecStart=/home/mbb-aba/miniconda3/envs/detikzify-env/bin/python -m detikzify.webui --light --root_path http://10.2.26.152:4000/workstation-17/DeTikZify/
+StandardOutput=append:/var/log/DeKitZify.log
+Restart=always
+User=mbb-aba
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then reload the service files and enable the new service:
+
+```sh
+sudo systemctl daemon-reload
+sudo systemctl enable detikzify-webui.service
+sudo systemctl start detikzify-webui.service
+```
+
 ## Model Weights & Datasets
 We upload all our DeTi*k*Zify models and datasets to the [Hugging Face
 Hub](https://huggingface.co/collections/nllg/detikzify-664460c521aa7c2880095a8b)
