@@ -44,9 +44,19 @@ def parse_args():
         type=int,
         help="Allowed timeframe for compilation.",
     )
+    argument_parser.add_argument(
+        "--root_path",
+        default=None,
+        help="Subpath on which the UI will be served when behind a proxy.",
+    )
     return vars(argument_parser.parse_args())
 
 if __name__ == "__main__":
     args = parse_args()
     share = args.pop("share")
-    build_ui(**args).queue().launch(share=share)
+    root_path = args.pop("root_path")
+    build_ui(**args).queue().launch(
+        share=share,
+        server_port=7860,
+        root_path=root_path,
+    )

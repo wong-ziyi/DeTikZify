@@ -18,6 +18,7 @@ from .helpers import (
     MctsOutputs,
     cached_load,
     info_once,
+    clear_cached_model,
     make_light,
     to_svg,
 )
@@ -338,4 +339,5 @@ def build_ui(
             queue=False
         )
 
+        demo.unload(clear_cached_model)
         return demo

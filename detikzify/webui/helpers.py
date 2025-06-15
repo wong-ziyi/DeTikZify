@@ -84,14 +84,40 @@ def make_light(stylable):
     else:
         raise ValueError
 
+_cached = None
+
 @lru_cache(maxsize=1)
 def cached_load(*args, **kwargs):
+    """Load the model once and cache it."""
+    global _cached
     gr.Info("Instantiating model. This could take a while...")
-    return load(*args, **kwargs)
+    _cached = load(*args, **kwargs)
+    return _cached
 
 @cache
 def info_once(message):
     gr.Info(message)
+
+def clear_cached_model():
+    """Release cached model and free GPU memory."""
+    global _cached
+    cached_load.cache_clear()
+    try:
+        import gc
+        import torch
+        if _cached:
+            model, _ = _cached
+            try:
+                model.cpu()
+            except Exception:
+                pass
+            _cached = None
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
+    except Exception:
+        pass
 
 class GeneratorLock:
     """
